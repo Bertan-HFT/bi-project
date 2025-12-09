@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: sales_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sales_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data 
+
+  # 2. Data Loading Service (One-time setup)
+  data_loader:
+    build:
+      context: .
+      dockerfile: Dockerfile.flask
+    container_name: sales_data_loader
+    command: python db_loader.py
+    volumes:
+      - ./db_loader.py:/app/db_loader.py
+      - ./sales_data_sample.csv:/app/sales_data_sample.csv
+    environment:
+      POSTGRES_HOST: db 
+    depends_on:
+      - db
+    
+  # 3. Flask Web Application Service (FIXED)
+  flask_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.flask
+    container_name: sales_dashboard_app
+    # FIX: Explicitly run the Flask app and keep the container alive
+    command: python app.py 
+    volumes:
+      # Maps the application files to the container's working directory /app
+      - ./flask_app/app.py:/app/app.py
+      - ./flask_app/templates:/app/templates
+    ports:
+      - "5000:5000"
+    environment:
+      POSTGRES_HOST: db
+    depends_on:
+      # Ensures data is loaded before the app starts trying to query the DB
+      - data_loader 
+
+volumes:
+  postgres_data:

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BI Sales Dashboard (Flask/Postgres/Docker)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .kpi-card {
+            border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center;
+        }
+        .kpi-value { font-size: 2em; font-weight: bold; color: #007bff; }
+        .kpi-label { font-size: 0.9em; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-4">
+        <h1 class="mb-4">💰 Dockerized Sales Performance Dashboard</h1>
+        <p class="text-muted">Data from PostgreSQL, analyzed and displayed by Python Flask.</p>
+
+        <h2 class="mt-5">Key Performance Indicators (KPIs)</h2>
+        <hr>
+        <div class="row">
+            {% for label, value in kpis.items() %}
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-value">{{ value }}</div>
+                    <div class="kpi-label">{{ label }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2 class="mt-5">Time Series Forecasting (6 Months)</h2>
+        <hr>
+        <p>Projected sales calculated using linear trend extrapolation.</p>
+        <div class="row">
+            <div class="col-md-6">{{ forecast_html | safe }}</div>
+            <div class="col-md-6">
+                <div class="alert alert-info" role="alert">
+                    **Note:** In a complete production dashboard, you would use a JavaScript library (like D3 or Plotly.js) to render an interactive line chart here.
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-5">Segment Performance Analysis</h2>
+        <hr>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Revenue by Product Line</h4>
+                {{ product_sales_html | safe }}
+            </div>
+            <div class="col-md-6">
+                <h4>Top 10 Revenue by Country</h4>
+                {{ country_sales_html | safe }}
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
