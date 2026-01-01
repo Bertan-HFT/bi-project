@@ -1,14 +1,11 @@
-# Use a Python base image
 FROM python:3.11-slim
 
-# Set working directory in the container
 WORKDIR /app
 
-# Copy dependency files and install them
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir pandas sqlalchemy psycopg2-binary
 
-# Expose the port for the Flask app
-EXPOSE 5000
+COPY db_loader.py .
+COPY sales_data_sample.csv .
 
-# The rest of the files are mounted/copied by docker-compose
+CMD ["python", "db_loader.py"]

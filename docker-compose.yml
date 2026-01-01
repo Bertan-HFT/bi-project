@@ -15,40 +15,36 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data 
 
-  # 2. Data Loading Service (One-time setup)
+  # 2. Data Loading Service (Simplified)
   data_loader:
-    build:
-      context: .
-      dockerfile: Dockerfile.flask
+    image: python:3.11-slim
     container_name: sales_data_loader
-    command: python db_loader.py
     volumes:
-      - ./db_loader.py:/app/db_loader.py
-      - ./sales_data_sample.csv:/app/sales_data_sample.csv
-    environment:
-      POSTGRES_HOST: db 
-    depends_on:
-      - db
-    
-  # 3. Flask Web Application Service (FIXED)
-  flask_app:
-    build:
-      context: .
-      dockerfile: Dockerfile.flask
-    container_name: sales_dashboard_app
-    # FIX: Explicitly run the Flask app and keep the container alive
-    command: python app.py 
-    volumes:
-      # Maps the application files to the container's working directory /app
-      - ./flask_app/app.py:/app/app.py
-      - ./flask_app/templates:/app/templates
-    ports:
-      - "5000:5000"
+      - .:/app
+    working_dir: /app
+    command: >
+      sh -c "pip install pandas sqlalchemy psycopg2-binary && python db_loader.py"
     environment:
       POSTGRES_HOST: db
     depends_on:
-      # Ensures data is loaded before the app starts trying to query the DB
-      - data_loader 
+      - db
+    
+  # 3. Grafana Visualization Service
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sales_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - db
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana-dashboards:/var/lib/grafana/dashboards
 
 volumes:
   postgres_data:
+  grafana_data:
