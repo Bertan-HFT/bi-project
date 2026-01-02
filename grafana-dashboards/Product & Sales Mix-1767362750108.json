@@ -18,91 +18,9 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 0,
+  "id": 3,
   "links": [],
   "panels": [
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "grafana-postgresql-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 5,
-      "options": {
-        "minVizHeight": 75,
-        "minVizWidth": 75,
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": true,
-        "showThresholdMarkers": true,
-        "sizing": "auto"
-      },
-      "pluginVersion": "12.3.1",
-      "targets": [
-        {
-          "dataset": "sales_db",
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT (COUNT(*) FILTER (WHERE deal_size = 'Large')::float / COUNT(*)) * 100 FROM sales_data",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Large Deal Ratio (%)",
-      "type": "gauge"
-    },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
@@ -119,29 +37,16 @@
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
             "lineWidth": 1,
-            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
-            },
-            "showPoints": "auto",
-            "showValues": false,
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -160,29 +65,39 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
+        "x": 0,
         "y": 0
       },
       "id": 4,
       "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
         "legend": {
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
         },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
         "tooltip": {
           "hideZeros": false,
           "mode": "single",
           "sort": "none"
-        }
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
       "pluginVersion": "12.3.1",
       "targets": [
@@ -191,7 +106,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT order_date AS time, COUNT(*) FROM sales_data WHERE status = 'Cancelled' GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT deal_size, SUM(sales) FROM sales_data GROUP BY deal_size ORDER BY SUM(sales) DESC",
           "refId": "A",
           "sql": {
             "columns": [
@@ -212,8 +127,121 @@
           }
         }
       ],
-      "title": "Cancellation Trend",
-      "type": "timeseries"
+      "title": "Sales by Deal Size",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "grafana-postgresql-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyEUR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "dataset": "sales_db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "grafana-postgresql-datasource"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT product_line, SUM(sales) as revenue \r\nFROM sales_data \r\nGROUP BY product_line \r\nORDER BY revenue DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Revenue by Product Line",
+      "type": "barchart"
     },
     {
       "datasource": {
@@ -232,7 +260,8 @@
               "viz": false
             }
           },
-          "mappings": []
+          "mappings": [],
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
@@ -249,7 +278,7 @@
           "placement": "bottom",
           "showLegend": true
         },
-        "pieType": "pie",
+        "pieType": "donut",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -271,7 +300,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT status, COUNT(DISTINCT order_number) \r\nFROM sales_data \r\nGROUP BY status;",
+          "rawSql": "SELECT deal_size, SUM(sales) \r\nFROM sales_data \r\nGROUP BY deal_size;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -292,7 +321,7 @@
           }
         }
       ],
-      "title": "Order Status Distribution",
+      "title": "Sales by Deal Size",
       "type": "piechart"
     },
     {
@@ -330,7 +359,20 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "revenue"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyEUR"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -350,7 +392,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT customername, SUM(sales) as lifetime_value \r\nFROM sales_data \r\nGROUP BY customername \r\nORDER BY lifetime_value DESC \r\nLIMIT 10;",
+          "rawSql": "SELECT \r\n    productcode, \r\n    SUM(quantityordered) AS units_sold, \r\n    SUM(sales) AS revenue \r\nFROM sales_data \r\nGROUP BY productcode \r\nORDER BY units_sold DESC \r\nLIMIT 10;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -371,7 +413,34 @@
           }
         }
       ],
-      "title": "Top 10 Customers by Revenue",
+      "title": "Top 10 Best Selling Products",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "other",
+                "enumConfig": {
+                  "text": [
+                    1774,
+                    1052,
+                    1031,
+                    1029,
+                    1024,
+                    1008,
+                    999,
+                    998,
+                    997
+                  ]
+                },
+                "targetField": "units_sold"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
       "type": "table"
     }
   ],
@@ -387,7 +456,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Regional & Customer Insights",
-  "uid": "adzdpsk",
-  "version": 4
+  "title": "Product & Sales Mix",
+  "uid": "addfwms",
+  "version": 1
 }
