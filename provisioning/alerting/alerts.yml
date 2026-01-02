@@ -1,0 +1,62 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: 'Sales Operations'
+    folder: 'Operations'
+    interval: '1h'
+    rules:
+      - uid: 'cancellation_spike'
+        title: 'High Cancellation Rate'
+        condition: 'A'
+        data:
+          - refId: 'A'
+            datasourceUid: 'grafana-postgresql-datasource'
+            relativeTimeRange: { from: 3600, to: 0 }
+            model:
+              rawSql: "SELECT COUNT(*) FROM sales_data WHERE status = 'Cancelled' AND order_date > now() - interval '1 hour'"
+        noDataState: 'OK'
+        execErrState: 'Alerting'
+        for: '5m'
+        annotations:
+          summary: "High number of order cancellations detected in the last hour."
+
+      - uid: 'revenue_at_risk'
+        title: 'Large Revenue Disputed'
+        condition: 'A'
+        data:
+          - refId: 'A'
+            datasourceUid: 'grafana-postgresql-datasource'
+            relativeTimeRange: { from: 86400, to: 0 }
+            model:
+              rawSql: "SELECT SUM(sales) FROM sales_data WHERE status = 'Disputed' AND order_date > now() - interval '24 hours'"
+        for: '10m'
+        annotations:
+          summary: "Over €5,000 in sales has been disputed in the last 24 hours. Immediate investigation required."
+
+      - uid: 'zero_sales_heartbeat'
+        title: 'Zero Sales Activity'
+        condition: 'A'
+        data:
+          - refId: 'A'
+            datasourceUid: 'grafana-postgresql-datasource'
+            relativeTimeRange: { from: 21600, to: 0 }
+            model:
+              rawSql: "SELECT COUNT(*) FROM sales_data WHERE order_date > now() - interval '6 hours'"
+        for: '1h'
+        noDataState: 'Alerting'
+        annotations:
+          summary: "No new orders recorded for over 6 hours. Check data ingestion or checkout systems."
+
+      - uid: 'data_quality_degradation'
+        title: 'Missing Customer Contact Data'
+        condition: 'A'
+        data:
+          - refId: 'A'
+            datasourceUid: 'grafana-postgresql-datasource'
+            relativeTimeRange: { from: 3600, to: 0 }
+            model:
+              rawSql: "SELECT COUNT(*) FROM sales_data WHERE (phone IS NULL OR customername IS NULL) AND order_date > now() - interval '1 hour'"
+        for: '5m'
+        annotations:
+          summary: "New records detected with missing names or phone numbers."
