@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 1. PostgreSQL Database Service
   db:
     image: postgres:15-alpine
     container_name: sales_db
@@ -15,7 +14,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data 
 
-  # 2. Data Loading Service (Simplified)
   data_loader:
     image: python:3.11-slim
     container_name: sales_data_loader
@@ -29,7 +27,6 @@ services:
     depends_on:
       - db
     
-  # 3. Grafana Visualization Service
   grafana:
     image: grafana/grafana:latest
     container_name: sales_grafana

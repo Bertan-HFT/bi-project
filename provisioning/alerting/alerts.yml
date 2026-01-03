@@ -8,7 +8,7 @@ groups:
     rules:
       - uid: 'cancellation_spike'
         title: 'High Cancellation Rate'
-        condition: 'A'
+        condition: 'A > 10'
         data:
           - refId: 'A'
             datasourceUid: 'grafana-postgresql-datasource'
