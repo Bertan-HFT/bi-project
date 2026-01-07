@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 4,
+  "id": 3,
   "links": [
     {
       "targetBlank": true,
@@ -301,7 +301,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT city, SUM(sales) FROM sales_data WHERE country = 'USA' GROUP BY city ORDER BY SUM(sales) DESC LIMIT 10",
+          "rawSql": "SELECT\r\n  city,\r\n  SUM(sales) AS total_sales\r\nFROM sales_data\r\nWHERE\r\n  (${country:singlequote} = 'ALL'\r\n   OR country = ${country:singlequote})\r\nGROUP BY city\r\nORDER BY total_sales DESC\r\nLIMIT 10;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -322,7 +322,7 @@
           }
         }
       ],
-      "title": "Top 10 Cities (USA)",
+      "title": "Top 10 Cities (${country})",
       "type": "barchart"
     },
     {
@@ -589,7 +589,22 @@
   "schemaVersion": 42,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "text": "Australia",
+          "value": "Australia"
+        },
+        "definition": "SELECT DISTINCT country FROM sales_data ORDER BY country;",
+        "label": "Country",
+        "name": "country",
+        "options": [],
+        "query": "SELECT DISTINCT country FROM sales_data ORDER BY country;",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "2002-12-31T23:00:00.000Z",
