@@ -8,9 +8,6 @@ groups:
 
     rules:
 
-      # -------------------------
-      # High Cancellation Rate
-      # -------------------------
       - uid: cancellation_spike
         title: High Cancellation Rate
         condition: C
@@ -55,9 +52,6 @@ groups:
                   operator:
                     type: and
 
-      # -------------------------
-      # Revenue at Risk
-      # -------------------------
       - uid: revenue_at_risk
         title: Large Revenue Disputed
         condition: C
@@ -100,9 +94,6 @@ groups:
                   operator:
                     type: and
 
-      # -------------------------
-      # Zero Sales Heartbeat
-      # -------------------------
       - uid: zero_sales_heartbeat
         title: Zero Sales Activity
         condition: C
@@ -145,9 +136,6 @@ groups:
                   operator:
                     type: and
 
-      # -------------------------
-      # Data Quality Degradation
-      # -------------------------
       - uid: data_quality_degradation
         title: Missing Customer Contact Data
         condition: C
