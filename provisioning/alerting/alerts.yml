@@ -2,61 +2,190 @@ apiVersion: 1
 
 groups:
   - orgId: 1
-    name: 'Sales Operations'
-    folder: 'Operations'
-    interval: '1h'
+    name: Sales Operations
+    folder: Operations
+    interval: 1h
+
     rules:
-      - uid: 'cancellation_spike'
-        title: 'High Cancellation Rate'
-        condition: 'A > 10'
-        data:
-          - refId: 'A'
-            datasourceUid: 'grafana-postgresql-datasource'
-            relativeTimeRange: { from: 3600, to: 0 }
-            model:
-              rawSql: "SELECT COUNT(*) FROM sales_data WHERE status = 'Cancelled' AND order_date > now() - interval '1 hour'"
-        noDataState: 'OK'
-        execErrState: 'Alerting'
-        for: '5m'
-        annotations:
-          summary: "High number of order cancellations detected in the last hour."
 
-      - uid: 'revenue_at_risk'
-        title: 'Large Revenue Disputed'
-        condition: 'A'
-        data:
-          - refId: 'A'
-            datasourceUid: 'grafana-postgresql-datasource'
-            relativeTimeRange: { from: 86400, to: 0 }
-            model:
-              rawSql: "SELECT SUM(sales) FROM sales_data WHERE status = 'Disputed' AND order_date > now() - interval '24 hours'"
-        for: '10m'
+      # -------------------------
+      # High Cancellation Rate
+      # -------------------------
+      - uid: cancellation_spike
+        title: High Cancellation Rate
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        labels:
+          severity: warning
+          team: sales
         annotations:
-          summary: "Over €5,000 in sales has been disputed in the last 24 hours. Immediate investigation required."
+          summary: High number of order cancellations detected in the last hour.
+        data:
+          - refId: A
+            datasourceUid: grafana-postgresql-datasource
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            model:
+              rawSql: |
+                SELECT COUNT(*)::numeric AS value
+                FROM sales_data
+                WHERE status = 'Cancelled'
+                  AND order_date > now() - interval '1 hour'
+              format: table
 
-      - uid: 'zero_sales_heartbeat'
-        title: 'Zero Sales Activity'
-        condition: 'A'
-        data:
-          - refId: 'A'
-            datasourceUid: 'grafana-postgresql-datasource'
-            relativeTimeRange: { from: 21600, to: 0 }
+          - refId: B
+            datasourceUid: __expr__
             model:
-              rawSql: "SELECT COUNT(*) FROM sales_data WHERE order_date > now() - interval '6 hours'"
-        for: '1h'
-        noDataState: 'Alerting'
-        annotations:
-          summary: "No new orders recorded for over 6 hours. Check data ingestion or checkout systems."
+              type: reduce
+              expression: A
+              reducer: last
 
-      - uid: 'data_quality_degradation'
-        title: 'Missing Customer Contact Data'
-        condition: 'A'
-        data:
-          - refId: 'A'
-            datasourceUid: 'grafana-postgresql-datasource'
-            relativeTimeRange: { from: 3600, to: 0 }
+          - refId: C
+            datasourceUid: __expr__
             model:
-              rawSql: "SELECT COUNT(*) FROM sales_data WHERE (phone IS NULL OR customername IS NULL) AND order_date > now() - interval '1 hour'"
-        for: '5m'
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [50]
+                  operator:
+                    type: and
+
+      # -------------------------
+      # Revenue at Risk
+      # -------------------------
+      - uid: revenue_at_risk
+        title: Large Revenue Disputed
+        condition: C
+        for: 10m
+        labels:
+          severity: critical
+          team: finance
         annotations:
-          summary: "New records detected with missing names or phone numbers."
+          summary: Over €5,000 in sales has been disputed in the last 24 hours.
+        data:
+          - refId: A
+            datasourceUid: grafana-postgresql-datasource
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            model:
+              rawSql: |
+                SELECT COALESCE(SUM(sales), 0)::numeric AS value
+                FROM sales_data
+                WHERE status = 'Disputed'
+                  AND order_date > now() - interval '24 hours'
+              format: table
+
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [5000]
+                  operator:
+                    type: and
+
+      # -------------------------
+      # Zero Sales Heartbeat
+      # -------------------------
+      - uid: zero_sales_heartbeat
+        title: Zero Sales Activity
+        condition: C
+        for: 1h
+        noDataState: Alerting
+        labels:
+          severity: critical
+          team: ops
+        annotations:
+          summary: No new orders recorded for over 6 hours.
+        data:
+          - refId: A
+            datasourceUid: grafana-postgresql-datasource
+            relativeTimeRange:
+              from: 21600
+              to: 0
+            model:
+              rawSql: |
+                SELECT COUNT(*)::numeric AS value
+                FROM sales_data
+                WHERE order_date > now() - interval '6 hours'
+              format: table
+
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+                  operator:
+                    type: and
+
+      # -------------------------
+      # Data Quality Degradation
+      # -------------------------
+      - uid: data_quality_degradation
+        title: Missing Customer Contact Data
+        condition: C
+        for: 5m
+        labels:
+          severity: warning
+          team: data
+        annotations:
+          summary: New records detected with missing customer names or phone numbers.
+        data:
+          - refId: A
+            datasourceUid: grafana-postgresql-datasource
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            model:
+              rawSql: |
+                SELECT COUNT(*)::numeric AS value
+                FROM sales_data
+                WHERE (phone IS NULL OR customername IS NULL)
+                  AND order_date > now() - interval '1 hour'
+              format: table
+
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
